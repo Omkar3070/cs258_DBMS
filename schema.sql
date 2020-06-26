@@ -1,0 +1,87 @@
+--The Drop Table is used to delete a table and all rows in the table.
+--Cascade Constraints is used as some of the Tables are referenced by
+--a foreign-key constraint.
+
+--ProductID is the Primary Key, hence non-negative
+--ProductPrice can be zero as a product could be free
+--ProductStockAmount has to positive
+DROP TABLE INVENTORY CASCADE CONSTRAINTS;
+CREATE TABLE INVENTORY (
+  ProductID INTEGER PRIMARY KEY,
+  ProductDesc VARCHAR(30) NOT NULL,
+  ProductPrice NUMERIC(8,2) NOT NULL,
+  ProductStockAmount INTEGER NOT NULL,
+  CONSTRAINT INV_CH CHECK (
+    ProductID > 0
+    AND ProductPrice >= 0
+    AND ProductStockAmount >=0
+  )
+);
+
+DROP TABLE ORDERS CASCADE CONSTRAINTS;
+CREATE TABLE ORDERS (
+  OrderID INTEGER PRIMARY KEY,
+  OrderType VARCHAR(30) NOT NULL,
+  OrderCompleted INTEGER NOT NULL,
+  OrderPlaced DATE NOT NULL,
+  CONSTRAINT OT_CHECK CHECK (
+    OrderType = 'InStore'
+    OR OrderType = 'Collection'
+    OR OrderType = 'Delivery'
+  ),
+  CONSTRAINT OC_CHECK CHECK (
+    OrderCompleted = 0
+    OR OrderCompleted = 1
+  )
+);
+
+--ProductQuantity cannot be negative
+DROP TABLE ORDER_PRODUCTS CASCADE CONSTRAINTS;
+CREATE TABLE ORDER_PRODUCTS (
+  OrderID INTEGER NOT NULL,
+  ProductID INTEGER NOT NULL,
+  ProductQuantity INTEGER NOT NULL,
+  PRIMARY KEY (OrderID, ProductID),
+  FOREIGN KEY (OrderID) REFERENCES ORDERS(OrderID),
+  FOREIGN KEY (ProductID) REFERENCES INVENTORY(ProductID),
+  CONSTRAINT OP_CH CHECK (ProductQuantity >= 0)
+);
+
+DROP TABLE DELIVERIES CASCADE CONSTRAINTS;
+CREATE TABLE DELIVERIES (
+  OrderID INTEGER NOT NULL,
+  FName VARCHAR(30) NOT NULL,
+  LName VARCHAR(30) NOT NULL,
+  House VARCHAR(30) NOT NULL,
+  Street VARCHAR(30) NOT NULL,
+  City VARCHAR(30) NOT NULL,
+  DeliveryDate DATE NOT NULL,
+  PRIMARY KEY (OrderID),
+  FOREIGN KEY (OrderID) REFERENCES ORDERS(OrderID)
+);
+
+DROP TABLE COLLECTIONS CASCADE CONSTRAINTS;
+CREATE TABLE COLLECTIONS (
+  OrderID INTEGER NOT NULL,
+  FName VARCHAR(30) NOT NULL,
+  LName VARCHAR(30) NOT NULL,
+  CollectionDate DATE NOT NULL,
+  PRIMARY KEY (OrderID),
+  FOREIGN KEY (OrderID) REFERENCES ORDERS(OrderID)
+);
+
+DROP TABLE STAFF CASCADE CONSTRAINTS;
+CREATE TABLE STAFF (
+  StaffID INTEGER PRIMARY KEY,
+  FName VARCHAR(30) NOT NULL,
+  LName VARCHAR(30) NOT NULL
+);
+
+DROP TABLE STAFF_ORDERS CASCADE CONSTRAINTS;
+CREATE TABLE STAFF_ORDERS (
+  StaffID INTEGER NOT NULL,
+  OrderID INTEGER NOT NULL,
+  PRIMARY KEY (StaffID, OrderID),
+  FOREIGN KEY (StaffID) REFERENCES STAFF(StaffID),
+  FOREIGN KEY (OrderID) REFERENCES ORDERS(OrderID)
+);
